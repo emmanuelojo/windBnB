@@ -1,35 +1,56 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed, reactive } from "vue";
 import Navbar from "./components/Navbar.vue";
 import store from "./store";
+
+interface SearchParams {
+  location: string;
+  guests: {
+    numberOfAdults: number;
+    numberOfChildren: number;
+  };
+}
 
 onMounted(() => {
   data.value;
 });
 
+
 const searchTerm = ref("");
 
 const data = ref(store.getters.locations);
 
-const search = () => {};
+const filteredLocations = computed(() => {
+  return data.value.filter((location) => {
+    return location.city.toLowerCase().includes(searchTerm.value.toLowerCase());
+  });
+});
+
+const search = (params: SearchParams) => {
+  searchTerm.value = params.location;
+};
 </script>
 
 <template>
   <div class="lg:w-[85%] lg:mx-auto">
-    <Navbar @searchParams="search" />
+    <Navbar @searchParams="(params) => search(params)" />
 
     <div class="mt-10 flex flex-col gap-8 mb-20 px-4 md:px-6">
       <div class="flex items-end justify-between">
-        <p class="font-bold text-2xl">All</p>
+        <p class="font-bold text-2xl">
+          {{ searchTerm.length ? searchTerm : "All" }}
+        </p>
 
-        <p class="text-xs">12+ stays</p>
+        <p class="text-xs">
+          {{ searchTerm.length ? filteredLocations.length : "12+" }} stays
+        </p>
       </div>
 
       <div
         class="grid sm:grid-cols-n-2 lg:grid-cols-n-3 place-content-center gap-10 sm:gap-6 lg:gap-9"
       >
         <div
-          v-for="(location, idx) in data"
+          v-for="(location, idx) in filteredLocations"
           :key="idx"
           class="w-full grid gap-3 cursor-pointer"
         >

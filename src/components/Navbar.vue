@@ -1,10 +1,31 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import store from "../store";
+import axios from "axios";
+
+onMounted(async () => {
+  await axios
+    .get("http://ip-api.com/json", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+    })
+    .then((res) => {
+      userCountry.value  = res.data
+    })
+    .catch(() => {
+      console.log("Request axios failed");
+    });
+});
+
+const userCountry = ref<any>();
 
 const showSearchOptions = ref(false);
 
 const searchingLocation = ref(false);
+
+const showDropdown = ref(true);
 
 const addingGuests = ref(false);
 
@@ -16,9 +37,10 @@ const numberOfChildren = ref(0);
 
 const data = ref(store.getters.locations);
 
+const emit = defineEmits(["searchParams"]);
+
 const filteredLocations = computed(() => {
   return data.value.filter((location) => {
-    // if(location.country.toLowerCase().includes(searchTerm.value.toLowerCase()) || location.city.toLowerCase().includes(searchTerm.value.toLowerCase())) return location
     return (
       location.country.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
       location.city.toLowerCase().includes(searchTerm.value.toLowerCase())
@@ -50,7 +72,7 @@ const searchDetails = reactive({
   location: searchTerm.value,
   guests: {
     numberOfAdults: numberOfAdults.value,
-    umberOfChildren: numberOfChildren.value,
+    numberOfChildren: numberOfChildren.value,
   },
 });
 
@@ -65,15 +87,29 @@ const decreaseCount = (text: string) => {
 };
 
 const closeModal = () => {
-    showSearchOptions.value = false
-    searchTerm.value = ''
-    numberOfAdults.value =  0
-    numberOfChildren.value = 0
+  showSearchOptions.value = false;
+  searchTerm.value = "";
+  numberOfAdults.value = 0;
+  numberOfChildren.value = 0;
+};
 
-}
+const selectCity = (text: string) => {
+  searchTerm.value = text;
+  showDropdown.value = false;
+};
 
 const handleSubmit = () => {
   showSearchOptions.value = false;
+
+  const data = {
+    location: searchTerm.value,
+    guests: {
+      numberOfAdults: numberOfAdults.value,
+      numberOfChildren: numberOfChildren.value,
+    },
+  };
+
+  emit("searchParams", data);
 };
 </script>
 
@@ -90,12 +126,36 @@ const handleSubmit = () => {
           class="mt-8 sm:mt-0 mx-auto w-[85%] sm:w-full h-10 flex items-center rounded-xl shadow cursor-pointer"
         >
           <div class="px-3 flex flex-grow items-center">
-            <p class="text-xs flex items-center">Lagos, Nigeria</p>
+            <p
+              class="text-xs flex items-center"
+              :class="searchTerm.length ? 'text-n-black' : 'text-n-grey'"
+            >
+              {{
+                searchTerm.length
+                  ? searchTerm + ", Finland"
+                  : userCountry !== undefined
+                  ? userCountry.city + ", " + userCountry.country
+                  : "Lagos, Nigeria"
+              }}
+            </p>
           </div>
           <div
             class="h-10 px-3 flex flex-grow items-center justify-center border-l border-r border-gray-200"
           >
-            <p class="text-xs text-gray-300">Add guests</p>
+            <p
+              class="text-xs"
+              :class="
+                numberOfAdults || numberOfChildren
+                  ? 'text-n-black'
+                  : 'text-n-grey'
+              "
+            >
+              {{
+                numberOfAdults || numberOfChildren
+                  ? numberOfAdults + numberOfChildren
+                  : "Add guests"
+              }}
+            </p>
           </div>
           <div class="px-3 text-red-500">
             <span class="material-icons text-lg">search</span>
@@ -110,10 +170,7 @@ const handleSubmit = () => {
     >
       <div class="flex justify-between items-center p-2 sm:pb-5 md:hidden">
         <p class="text-n-black font-semibold text-sm">Edit your search</p>
-        <div
-          @click="closeModal"
-          class="text-n-black cursor-pointer"
-        >
+        <div @click="closeModal" class="text-n-black cursor-pointer">
           <i class="fa fa-times"></i>
         </div>
       </div>
@@ -133,6 +190,7 @@ const handleSubmit = () => {
               <input
                 type="text"
                 v-model="searchTerm"
+                @focus="showDropdown = true"
                 placeholder="Add location"
                 class="placeholder:text-gray-400 placeholder:text-[13px] text-[13px] border-none outline-none"
               />
@@ -150,17 +208,16 @@ const handleSubmit = () => {
               <label for="" class="text-[9px] font-bold uppercase"
                 >guests</label
               >
-              <input
-                type="text"
-                v-model="totalGuests"
-                placeholder="Add guests"
-                class="placeholder:text-gray-400 placeholder:text-[13px] text-[13px] border-none outline-none"
+              <p
+                class="placeholder:text-gray-400 placeholder:text-[13px] text-[13px] border-none outline-none cursor-pointer"
                 :class="
                   numberOfAdults + numberOfChildren < 1
                     ? 'text-n-grey'
                     : 'text-n-black'
                 "
-              />
+              >
+                {{ totalGuests }}
+              </p>
             </div>
           </div>
           <div class="my-1 hidden sm:flex justify-center items-center">
@@ -179,9 +236,12 @@ const handleSubmit = () => {
             class="mt-8 pl-4"
             :class="searchingLocation ? 'sm:visible' : 'invisible'"
           >
-            <div v-if="searchTerm.length" class="grid gap-4">
+            <div v-if="searchTerm.length && showDropdown" class="grid gap-4">
               <div v-for="(location, idx) in filteredLocations" :key="idx">
-                <div class="flex items-center text-n-dark-grey cursor-pointer">
+                <div
+                  @click="selectCity(location.city)"
+                  class="flex items-center text-n-dark-grey cursor-pointer"
+                >
                   <span class="material-icons mr-2"> room</span>
                   <span>{{ location.city + ", " + location.country }} </span>
                 </div>
