@@ -135,7 +135,7 @@ const handleSubmit = () => {
                   ? searchTerm + ", Finland"
                   : userCountry !== undefined
                   ? userCountry.city + ", " + userCountry.country
-                  : "Lagos, Nigeria"
+                  : "Abuja, Nigeria"
               }}
             </p>
           </div>
