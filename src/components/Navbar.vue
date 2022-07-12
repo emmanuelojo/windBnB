@@ -4,20 +4,22 @@ import store from "../store";
 import axios from "axios";
 
 onMounted(async () => {
-  await axios
-    .get("http://ip-api.com/json", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json",
-      },
-    })
-    .then((res) => {
-      userCountry.value  = res.data
-    })
-    .catch(() => {
-      console.log("Request axios failed");
-    });
+  // await axios
+  //   .get("http://ip-api.com/json", {
+  //     headers: {
+  //       "Access-Control-Allow-Origin": "*",
+  //       "Content-Type": "application/json",
+  //     },
+  //   })
+  //   .then((res) => {
+  //     userCountry.value = res.data;
+  //   })
+  //   .catch(() => {
+  //     console.log("Request axios failed");
+  //   });
 });
+
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const userCountry = ref<any>();
 
@@ -130,13 +132,7 @@ const handleSubmit = () => {
               class="text-xs flex items-center"
               :class="searchTerm.length ? 'text-n-black' : 'text-n-grey'"
             >
-              {{
-                searchTerm.length
-                  ? searchTerm + ", Finland"
-                  : userCountry !== undefined
-                  ? userCountry.city + ", " + userCountry.country
-                  : "Abuja, Nigeria"
-              }}
+              {{ searchTerm.length ? searchTerm + ", Finland" : timezone }}
             </p>
           </div>
           <div

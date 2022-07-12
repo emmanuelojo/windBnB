@@ -63,7 +63,7 @@ const search = (params: SearchParams) => {
             <div class="flex items-center gap-2">
               <div
                 v-if="location.superHost"
-                class="border border-black rounded-2xl w-24 h-7 flex justify-center items-center hover:bg-n-black hover:text-n-white"
+                class="border border-black rounded-2xl w-[100px] h-7 flex justify-center items-center hover:bg-n-black hover:text-n-white"
               >
                 <p class="text-[13px] uppercase font-bold">super host</p>
               </div>
